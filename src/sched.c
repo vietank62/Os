@@ -30,7 +30,10 @@ void init_scheduler(void)
 	int i;
 
 	for (i = 0; i < MAX_PRIO; i++)
+	{
 		mlq_ready_queue[i].size = 0;
+		mlq_ready_queue[i].num_of_cpu = MAX_PRIO - 1; // init number of cpu each queue can use max
+	}
 #endif
 	ready_queue.size = 0;
 	run_queue.size = 0;
@@ -50,7 +53,25 @@ struct pcb_t *get_mlq_proc(void)
 	/*TODO: get a process from PRIORITY [ready_queue].
 	 * Remember to use lock to protect the queue.
 	 */
-	proc = dequeue(&mlq_ready_queue[0]);
+	unsigned long curr_prio = 0, max_prio = MAX_PRIO;
+	while (curr_prio < max_prio)
+	{
+		if (!empty(&mlq_ready_queue[curr_prio]) && mlq_ready_queue[curr_prio].num_of_cpu > 0)
+		{
+			pthread_mutex_lock(&queue_lock);
+			proc = dequeue(&mlq_ready_queue[curr_prio]);
+			if (proc != NULL)
+			{
+				mlq_ready_queue[curr_prio].num_of_cpu--;
+			}
+			pthread_mutex_unlock(&queue_lock);
+			break;
+		}
+		else
+		{
+			curr_prio++;
+		}
+	}
 	return proc;
 }
 
@@ -58,6 +79,7 @@ void put_mlq_proc(struct pcb_t *proc)
 {
 	pthread_mutex_lock(&queue_lock);
 	enqueue(&mlq_ready_queue[proc->prio], proc);
+	mlq_ready_queue[proc->prio].num_of_cpu++;
 	pthread_mutex_unlock(&queue_lock);
 }
 
