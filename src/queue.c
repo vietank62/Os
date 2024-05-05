@@ -13,9 +13,7 @@ void enqueue(struct queue_t *q, struct pcb_t *proc)
 {
         /* TODO: put a new process to queue [q] */
         if (q == NULL || proc == NULL)
-        {
                 return;
-        }
         if (q->size >= MAX_QUEUE_SIZE)
         {
                 printf("Queue is full.\n");
@@ -31,9 +29,7 @@ struct pcb_t *dequeue(struct queue_t *q)
          * in the queue [q] and remember to remove it from q
          * */
         if (q == NULL || q->size == 0)
-        {
                 return NULL;
-        }
         struct pcb_t *first_proc = q->proc[0];
         for (int i = 0; i < q->size - 1; i++)
         {
